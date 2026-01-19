@@ -19,6 +19,7 @@ package ttrpc
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"math/rand"
 	"net"
@@ -385,6 +386,9 @@ func (c *serverConn) run(sctx context.Context) {
 			}
 
 			mh, p, err := ch.recv()
+			if err != nil {
+				fmt.Println(err)
+			}
 			if err != nil {
 				status, ok := status.FromError(err)
 				if !ok {

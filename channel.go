@@ -23,9 +23,8 @@ import (
 	"io"
 	"net"
 	"sync"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	// "google.golang.org/grpc/codes"
+	// "google.golang.org/grpc/status"
 )
 
 const (
@@ -122,13 +121,13 @@ func (ch *channel) recv() (messageHeader, []byte, error) {
 	if err != nil {
 		return messageHeader{}, nil, err
 	}
-
-	if mh.Length > uint32(messageLengthMax) {
+	fmt.Printf("len is %d \n", mh.Length)
+	if mh.Length > 1048640 {
 		if _, err := ch.br.Discard(int(mh.Length)); err != nil {
 			return mh, nil, fmt.Errorf("failed to discard after receiving oversized message: %w", err)
 		}
-
-		return mh, nil, status.Errorf(codes.ResourceExhausted, "message length %v exceed maximum message size of %v", mh.Length, messageLengthMax)
+		// always pretend generate a discard error
+		return mh, nil, fmt.Errorf("failed to discard after receiving oversized message")
 	}
 
 	var p []byte
