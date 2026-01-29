@@ -55,7 +55,7 @@ func OversizedMessageError(messageLength int) error {
 
 	return &OversizedMessageErr{
 		messageLength: messageLength,
-		err:           status.Errorf(codes.ResourceExhausted, "message length %v exceed maximum message size of %v", messageLength, messageLengthMax),
+		err:           status.Errorf(codes.ResourceExhausted, "message2 length %v exceed maximum message size of %v", messageLength, messageLengthMax),
 	}
 }
 
