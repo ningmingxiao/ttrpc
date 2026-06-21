@@ -23,13 +23,16 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 
 	ttrpc "github.com/containerd/ttrpc"
 	"github.com/containerd/ttrpc/example"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-const socket = "example-ttrpc-server"
+const socket = "example-ttrpc-server-test"
+
+const bigstring = 1 * 1024 * 1024
 
 func main() {
 	if err := handle(); err != nil {
@@ -73,7 +76,7 @@ func dumpMetadata(ctx context.Context) {
 
 func server() error {
 	s, err := ttrpc.NewServer(
-		ttrpc.WithServerHandshaker(defaultHandshaker()),
+		ttrpc.WithServerHandshaker(ttrpc.UnixSocketRequireSameUser()),
 		ttrpc.WithUnaryServerInterceptor(serverIntercept),
 	)
 	if err != nil {
@@ -103,8 +106,9 @@ func client() error {
 	tc := ttrpc.NewClient(conn, ttrpc.WithUnaryClientInterceptor(clientIntercept))
 	client := example.NewExampleClient(tc)
 
+	bigdata := generate1MBString("")
 	r := &example.Method1Request{
-		Foo: os.Args[2],
+		Foo: bigdata,
 		Bar: os.Args[3],
 	}
 
@@ -118,6 +122,27 @@ func client() error {
 		return err
 	}
 	return json.NewEncoder(os.Stdout).Encode(resp)
+}
+
+func generate1MBString(baseStr string) string {
+	if baseStr == "" {
+		baseStr = "a"
+	}
+
+	baseByteLen := len(baseStr)
+	if baseByteLen == 0 {
+		return ""
+	}
+
+	repeatTimes := bigstring / baseByteLen
+	remainBytes := bigstring % baseByteLen
+
+	result := strings.Repeat(baseStr, repeatTimes)
+	if remainBytes > 0 {
+		result += baseStr[:remainBytes]
+	}
+
+	return result
 }
 
 type exampleServer struct {
